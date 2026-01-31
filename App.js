@@ -1,14 +1,37 @@
 import { Accelerometer } from "expo-sensors";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-    Animated,
-    Easing,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Animated,
+  Easing,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+// Volume manager - requires development build (not available in Expo Go)
+let VolumeManager = null;
+let VolumeManagerAvailable = false;
+
+try {
+  const volumeManagerModule = require("react-native-volume-manager");
+  VolumeManager = volumeManagerModule.default || volumeManagerModule;
+  
+  if (VolumeManager && typeof VolumeManager.addVolumeListener === 'function') {
+    VolumeManagerAvailable = true;
+    console.log("✅ VolumeManager loaded successfully - Development build detected");
+    console.log("📦 VolumeManager methods:", Object.keys(VolumeManager));
+  } else {
+    console.log("⚠️ VolumeManager loaded but addVolumeListener not available");
+  }
+} catch (e) {
+  // Will be null in Expo Go, but will work in development build
+  console.log("ℹ️ Volume manager not available (Expo Go mode) - Feature disabled");
+  console.log("💡 To enable: Create a development build with 'npx expo prebuild' and 'npx expo run:ios'");
+  VolumeManager = null;
+  VolumeManagerAvailable = false;
+}
 
 const ANSWERS = [
   "It is certain",
@@ -33,9 +56,15 @@ const ANSWERS = [
   "Very doubtful",
 ];
 
+const YES_NO_ANSWERS = [
+  "Yes",
+  "No",
+];
+
 export default function App() {
   const [answer, setAnswer] = useState("🎱 Shake!");
   const [isShaking, setIsShaking] = useState(false);
+  const [yesNoMode, setYesNoMode] = useState(false);
 
   const spinAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(1)).current;
@@ -44,13 +73,21 @@ export default function App() {
   const lastShakeTimeRef = useRef(0);
   const lastAccelRef = useRef(null);
   const deltaCountRef = useRef(0);
+  const lastVolumeRef = useRef(null);
+  const volumeDownPressTimeRef = useRef(null);
+  const volumeCheckIntervalRef = useRef(null);
 
   const animateSpin = useCallback(() => {
-    if (isShaking) return;
+    if (isShaking) {
+      console.log("⚠️ animateSpin called but isShaking is true, returning");
+      return;
+    }
     setIsShaking(true);
-    console.log("🎱 Shake detected! Animating...");
+    console.log("🎱 animateSpin called! yesNoMode:", yesNoMode);
 
-    const newAnswer = ANSWERS[Math.floor(Math.random() * ANSWERS.length)];
+    const answerPool = yesNoMode ? YES_NO_ANSWERS : ANSWERS;
+    const newAnswer = answerPool[Math.floor(Math.random() * answerPool.length)];
+    console.log("📝 Selected answer:", newAnswer, "from pool:", yesNoMode ? "YES_NO" : "ALL");
 
     Animated.sequence([
       Animated.sequence([
@@ -83,7 +120,7 @@ export default function App() {
       setIsShaking(false);
       console.log("Animation complete!");
     });
-  }, [isShaking, spinAnim, scaleAnim]);
+  }, [isShaking, spinAnim, scaleAnim, yesNoMode]);
 
   useEffect(() => {
     let subscription;
@@ -153,6 +190,123 @@ export default function App() {
       }
     };
   }, [animateSpin, isShaking]);
+
+  // Volume button detection - requires development build
+  useEffect(() => {
+    console.log("🔍 Setting up volume detection...");
+    console.log("📊 VolumeManager available:", VolumeManagerAvailable ? "YES (Development Build)" : "NO (Expo Go)");
+    
+    if (!VolumeManagerAvailable || !VolumeManager) {
+      console.log("ℹ️ Volume button feature disabled - requires development build");
+      console.log("💡 To enable: Run 'npx expo prebuild' then 'npx expo run:ios' or 'npx expo run:android'");
+      // Volume manager not available in Expo Go - feature gracefully disabled
+      return;
+    }
+
+    let volumeListener = null;
+    let lastVolume = null;
+
+    try {
+      console.log("🔧 Checking VolumeManager.addVolumeListener...");
+      // Listen for volume changes
+      if (VolumeManager.addVolumeListener) {
+        console.log("✅ addVolumeListener exists, setting up listener...");
+        volumeListener = VolumeManager.addVolumeListener((result) => {
+          try {
+            console.log("🔊 Volume event received:", JSON.stringify(result));
+            const { volume, type } = result;
+            const now = Date.now();
+
+            console.log(`📊 Volume: ${volume}, Type: ${type}, LastVolume: ${lastVolume}, isShaking: ${isShaking}`);
+
+            // Detect volume down button press
+            const isVolumeDown = type === 'volume_down' || (lastVolume !== null && volume < lastVolume - 0.05);
+            const isVolumeUp = type === 'volume_up' || (lastVolume !== null && volume > lastVolume + 0.05);
+            
+            console.log(`🔍 isVolumeDown: ${isVolumeDown}, isVolumeUp: ${isVolumeUp}`);
+
+            if (isVolumeDown) {
+              if (volumeDownPressTimeRef.current === null) {
+                volumeDownPressTimeRef.current = now;
+                console.log("🔽 Volume down detected, starting timer...", {
+                  time: now,
+                  volume: volume,
+                  lastVolume: lastVolume
+                });
+                
+                // Set timer for long press (500ms)
+                setTimeout(() => {
+                  console.log("⏰ Timer fired! Checking conditions...");
+                  if (volumeDownPressTimeRef.current !== null) {
+                    const pressDuration = Date.now() - volumeDownPressTimeRef.current;
+                    console.log(`⏱️ Press duration: ${pressDuration}ms, isShaking: ${isShaking}`);
+                    if (pressDuration >= 500 && !isShaking) {
+                      console.log("✅ Volume down held - Yes/No mode!");
+                      console.log("🔄 Setting yesNoMode to true...");
+                      setYesNoMode(true);
+                      console.log("🎱 Calling animateSpin...");
+                      animateSpin();
+                      // Reset after answer is shown
+                      setTimeout(() => {
+                        console.log("🔄 Resetting yesNoMode after 2s");
+                        setYesNoMode(false);
+                        volumeDownPressTimeRef.current = null;
+                      }, 2000);
+                    } else {
+                      console.log("❌ Conditions not met:", {
+                        pressDuration,
+                        required: 500,
+                        isShaking
+                      });
+                    }
+                  } else {
+                    console.log("⚠️ volumeDownPressTimeRef is null, timer cancelled");
+                  }
+                }, 500);
+              } else {
+                console.log("⚠️ Volume down already being tracked");
+              }
+            } else if (isVolumeUp) {
+              // Volume up or released - reset
+              console.log("🔺 Volume up detected, resetting...");
+              if (volumeDownPressTimeRef.current !== null) {
+                console.log("🔄 Clearing volumeDownPressTimeRef");
+                volumeDownPressTimeRef.current = null;
+                setYesNoMode(false);
+              }
+            } else {
+              console.log("➡️ Volume stable or unknown change");
+            }
+
+            lastVolume = volume;
+            console.log("💾 Updated lastVolume to:", lastVolume);
+          } catch (err) {
+            console.log("❌ Volume listener error:", err);
+            console.log("❌ Error stack:", err.stack);
+          }
+        });
+        console.log("✅ Volume listener set up successfully");
+      } else {
+        console.log("❌ addVolumeListener does not exist on VolumeManager");
+        console.log("📦 Available methods:", Object.keys(VolumeManager));
+      }
+    } catch (error) {
+      console.log("❌ Volume manager setup error:", error);
+      console.log("❌ Error stack:", error.stack);
+    }
+
+    return () => {
+      console.log("🧹 Cleaning up volume listener...");
+      if (volumeListener && typeof volumeListener.remove === 'function') {
+        volumeListener.remove();
+        console.log("✅ Volume listener removed");
+      }
+      if (volumeDownPressTimeRef.current) {
+        volumeDownPressTimeRef.current = null;
+      }
+    };
+  }, [animateSpin, isShaking]);
+
   const rotation = spinAnim.interpolate({
     inputRange: [0, 1],
     outputRange: ["0deg", "720deg"],

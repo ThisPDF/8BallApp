@@ -8,6 +8,7 @@ A beautiful Magic 8 Ball predictor app for iOS built with React Native and Expo.
 📱 **Beautiful UI** - Dark theme with smooth animations
 ✅ **20+ Answers** - Traditional Magic 8 Ball responses
 🎮 **Tap Alternative** - Can also tap the ball button if shake isn't available
+🔀 **Yes/No Mode Toggle** - Switch to get only Yes or No answers
 🌟 **Smooth Animations** - Rotating ball with scale effects
 
 ## Installation & Running
@@ -40,8 +41,16 @@ npm start
 
 1. **Shake Your Phone**: Shake your iOS device to spin the ball and reveal your answer
 2. **Or Tap the Button**: Tap "Tap for Answer" button if shake isn't available
-3. **Read Your Answer**: Check the window on the ball for your response
-4. **Ask Again**: Shake again to get another answer
+3. **Yes/No Mode**: Toggle the "Yes/No Mode" switch to get only Yes or No answers
+4. **Read Your Answer**: Check the window on the ball for your response
+5. **Ask Again**: Shake again to get another answer
+
+### Yes/No Mode Feature
+
+- **Toggle Switch**: Use the switch below the button to activate Yes/No mode
+- **Simple Answers**: When activated, the app will only respond with "Yes" or "No"
+- **Visual Indicator**: The hint text updates to show when Yes/No mode is active
+- **Works Everywhere**: This feature works in Expo Go and all Expo managed workflows
 
 ## Customization
 

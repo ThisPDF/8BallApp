@@ -8,8 +8,9 @@
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "ios": {
+      "icon": "./assets/images/icon.png",
       "supportsTablet": true,
-      "bundleIdentifier": "com.yourcompany.magic8ball"
+      "bundleIdentifier": "com.magic8ball.app"
     },
     "android": {
       "adaptiveIcon": {
