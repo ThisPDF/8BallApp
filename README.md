@@ -1,50 +1,65 @@
-# Welcome to your Expo app 👋
+# Magic 8 Ball - iOS App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A beautiful Magic 8 Ball predictor app for iOS built with React Native and Expo. Shake your phone to get answers to your yes/no questions!
 
-## Get started
+## Features
 
-1. Install dependencies
+✨ **Shake Detection** - Simply shake your phone to get an answer
+📱 **Beautiful UI** - Dark theme with smooth animations
+✅ **20+ Answers** - Traditional Magic 8 Ball responses
+🎮 **Tap Alternative** - Can also tap the ball button if shake isn't available
+🌟 **Smooth Animations** - Rotating ball with scale effects
 
-   ```bash
-   npm install
-   ```
+## Installation & Running
 
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+### On iOS Simulator
 
 ```bash
-npm run reset-project
+npm start
+# Then press 'i' in the terminal
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Or directly:
 
-## Learn more
+```bash
+npm run ios
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+### On Physical iOS Device
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+1. Install **Expo Go** from Apple App Store
+2. Run:
 
-## Join the community
+```bash
+npm start
+```
 
-Join our community of developers creating universal apps.
+3. Scan the QR code with your phone camera or Expo Go app
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## How to Use
+
+1. **Shake Your Phone**: Shake your iOS device to spin the ball and reveal your answer
+2. **Or Tap the Button**: Tap "Tap for Answer" button if shake isn't available
+3. **Read Your Answer**: Check the window on the ball for your response
+4. **Ask Again**: Shake again to get another answer
+
+## Customization
+
+Edit `App.js` to customize:
+
+- **Answers**: Modify the `ANSWERS` array (lines 10-32)
+- **Colors**: Change style colors in the `StyleSheet` (lines 165+)
+- **Shake Sensitivity**: Adjust `shakeThreshold` value (line 53)
+- **Shake Cooldown**: Change `shakeCooldown` in milliseconds (line 54)
+
+## Troubleshooting
+
+- **Shake not detected on simulator?** Use the "Tap for Answer" button or press Cmd+Ctrl+Z
+- **Permission issues?** Grant motion sensor permissions in Expo Go
+- **Connection issues?** Ensure your device and computer are on the same network
+
+## Learn More
+
+- [Expo Documentation](https://docs.expo.dev/)
+- [React Native Docs](https://reactnative.dev/)
+- [Expo Sensors](https://docs.expo.dev/versions/latest/sdk/sensors/)
